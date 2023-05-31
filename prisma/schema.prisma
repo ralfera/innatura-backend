@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Perfil_Usuario {
+  id       Int        @id @default(autoincrement())
+  nome     String
+  Usuarios Usuarios[]
+}
+
+model Usuarios {
+  id        String          @id @default(uuid())
+  usuario   String          @unique
+  senha     String
+  nome      String?
+  idPerfil  Int
+  Perfil    Perfil_Usuario? @relation(fields: [idPerfil], references: [id])
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Clientes {
+  id           String    @id @default(uuid())
+  nome         String
+  placa        String?
+  nomeContato  String?
+  tipo         String?   @default("padrao")
+  telefone     String?
+  endereco     String?
+  diasEntregas String?
+  tabelaPreco  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  Vendas       Vendas[]
+  Pedidos      Pedidos[]
+}
+
+model Vendas {
+  id                  String                 @id @default(uuid())
+  data                DateTime?              @default(now())
+  dataVencimento      DateTime?
+  dataPagamento       DateTime?
+  valorVenda          Float
+  saldoAPagar         Float?                 @default(0)
+  idCliente           String
+  Clientes            Clientes               @relation(fields: [idCliente], references: [id])
+  status              String                 @default("aberto")
+  idFormaPagamento    Int
+  FormaPagamento      Forma_Pagamento        @relation(fields: [idFormaPagamento], references: [id])
+  MovimentacaoEstoque Movimentacao_Estoque[]
+  ItemVenda           ItemVenda[]
+  FluxoCaixa          FluxoCaixa[]
+  Pedidos             Pedidos[]
+}
+
+model ItemVenda {
+  id         String   @id @default(uuid())
+  idVenda    String
+  idProduto  String
+  quantidade Int
+  valor      Float
+  Venda      Vendas   @relation(fields: [idVenda], references: [id], onDelete: Cascade)
+  Produto    Produtos @relation(fields: [idProduto], references: [id])
+}
+
+model Forma_Pagamento {
+  id     Int      @id @default(autoincrement())
+  nome   String
+  Vendas Vendas[]
+}
+
+// Model para a tabela `produtos`
+model Produtos {
+  id                String                 @id @default(uuid())
+  nome              String
+  idCategoria       Int
+  categoria         Categoria_Produto      @relation(fields: [idCategoria], references: [id])
+  preco             Float
+  imagem            String?                @default("null")
+  quantidadeEstoque Int                    @default(0)
+  itensVenda        ItemVenda[]
+  itensPedido       ItemPedido[]
+  Movimentacao      Movimentacao_Estoque[]
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+}
+
+// Model para a tabela `categoriasprodutos`
+model Categoria_Produto {
+  id        Int        @id @default(autoincrement())
+  descricao String?
+  Produtos  Produtos[]
+}
+
+// Model para a tabela `nomeEstoque`
+model Nome_Estoque {
+  id                  Int                    @id @default(autoincrement())
+  nomeEstoque         String
+  MovimentacaoEstoque Movimentacao_Estoque[]
+}
+
+model Movimentacao_Estoque {
+  id            String       @id @default(uuid())
+  data          DateTime?    @default(now())
+  idProduto     String
+  movimento     String
+  quantidade    Int
+  observacao    String?
+  idVenda       String?
+  nomeEstoqueId Int
+  Produtos      Produtos     @relation(fields: [idProduto], references: [id])
+  Venda         Vendas?      @relation(fields: [idVenda], references: [id], onDelete: Cascade)
+  nomeEstoque   Nome_Estoque @relation(fields: [nomeEstoqueId], references: [id])
+}
+
+enum Movimento {
+  e
+  s
+}
+
+model FluxoCaixa_Categorias {
+  id         Int          @id @default(autoincrement())
+  descricao  String
+  FluxoCaixa FluxoCaixa[]
+}
+
+model FluxoCaixa {
+  id                      String                @id @default(uuid())
+  data                    DateTime?             @default(now())
+  movimento               Movimento
+  valor                   Float
+  desconto                Float?                @default(0)
+  descricao               String?
+  idVenda                 String?
+  Vendas                  Vendas?               @relation(fields: [idVenda], references: [id], onDelete: Cascade)
+  Caixa                   Caixa?                @relation(fields: [caixaId], references: [id], onDelete: Cascade)
+  caixaId                 String?
+  fluxoCaixa_CategoriasId Int
+  fluxoCaixa_Categoria    FluxoCaixa_Categorias @relation(fields: [fluxoCaixa_CategoriasId], references: [id])
+}
+
+model Pedidos {
+  id           String       @id @default(uuid())
+  dataAbertura DateTime     @default(now())
+  status       String       @default("aberto")
+  dataEntrega  DateTime?    @default("0001-01-01T00:00:00Z")
+  itemPedido   ItemPedido[]
+  Venda        Vendas?      @relation(fields: [vendasId], references: [id], onDelete: Cascade)
+  vendasId     String?
+  Clientes     Clientes?    @relation(fields: [clientesId], references: [id])
+  clientesId   String?
+}
+
+model ItemPedido {
+  id         String    @id @default(uuid())
+  Produtos   Produtos? @relation(fields: [produtosId], references: [id])
+  produtosId String?
+  Pedidos    Pedidos?  @relation(fields: [pedidosId], references: [id])
+  pedidosId  String?
+  quantidade Int
+}
+
+enum StatusCaixa {
+  aberto
+  fechado
+}
+
+model Caixa {
+  id              String       @id @default(uuid())
+  dataAbertura    DateTime     @default(now())
+  dataFechamento  DateTime?
+  valorAbertura   Float
+  valorFechamento Float        @default(0)
+  valorAtual      Float
+  status          StatusCaixa  @default(aberto)
+  Fluxo           FluxoCaixa[]
+}
