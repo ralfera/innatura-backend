@@ -51,7 +51,7 @@ export default async function handle(
 
     case "GET":
       const { id }: Partial<{ id: string }> = req.query;
-      const caixa = await prisma.caixa.findFirst({ where: { id: id } });
+      const caixa: any = await prisma.caixa.findFirst({ where: { id: id } });
       const estoque = await new EstoqueController().byEstoque(2);
       const fluxos = await prisma.fluxoCaixa.findMany({
         orderBy: {
@@ -108,7 +108,7 @@ export default async function handle(
           const quantidade = itemVenda.quantidade;
 
           const produtoExistente = fechamentoProdutos.find(
-            (produto) => produto.nomeProduto === nomeProduto
+            (produto: any) => produto.nomeProduto === nomeProduto
           );
 
           if (produtoExistente) {

@@ -1,12 +1,17 @@
 import { api, prisma } from "@/helpers/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   switch (req.method) {
-    case 'POST':
-      const { usuario, senha, nome, idPerfil } = req.body
-      if (!req.body.usuario || !req.body.senha) return res.status(400).json({ error: true, message: "Campo senha ou usuário vazio" })
+    case "POST":
+      const { usuario, senha, nome, idPerfil } = req.body;
+      if (!req.body.usuario || !req.body.senha)
+        return res
+          .status(400)
+          .json({ error: true, message: "Campo senha ou usuário vazio" });
 
       try {
         const user = await prisma.usuarios.create({
@@ -14,15 +19,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             usuario,
             senha: senha.toString(),
             nome,
-            idPerfil
-          }
-        })
-        res.status(201).json(user)
+            idPerfil,
+          },
+        });
+        res.status(201).json(user);
       } catch (error: any) {
-        res.status(400).json({ error: true, message: error.message })
+        res.status(400).json({ error: true, message: error.message });
       }
 
-      break
+      break;
 
     default:
       try {
@@ -33,23 +38,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             nome: true,
             Perfil: {
               select: {
-                nome: true
-              }
+                nome: true,
+              },
             },
             updatedAt: true,
             usuario: true,
-            senha: false
+            senha: false,
           },
           orderBy: {
-            nome: 'asc'
+            nome: "asc",
           },
-        })
-        res.status(200).json(users)
-      } catch (error) {
-        res.status(500).json(error)
+        });
+        res.status(200).json(users);
+      } catch (error: any) {
+        res.status(500).json(error?.message);
       }
 
-      break
-
+      break;
   }
 }

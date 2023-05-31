@@ -18,8 +18,8 @@ export default async function handle(
           pedidosAberto: pedidosAberto,
           estoque,
         });
-      } catch (error) {
-        res.status(400).json(error);
+      } catch (error: any) {
+        res.status(400).json(error?.message);
       }
 
       break;

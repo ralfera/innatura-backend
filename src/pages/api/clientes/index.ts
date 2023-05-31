@@ -2,42 +2,43 @@ import { prisma } from "@/helpers/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export interface iClientes {
-  id?: string,
-  nome?: string
-  placa?: string
-  nomeContato?: string
-  tipo?: string
-  telefone?: string | number
-  endereco?: string
-  diasEntregas?: string[]
-  tabelaPreco?: number | null | undefined
+  id?: string;
+  nome?: string;
+  placa?: string;
+  nomeContato?: string;
+  tipo?: string;
+  telefone?: string | number;
+  endereco?: string;
+  diasEntregas?: string[];
+  tabelaPreco?: number | null | undefined;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   switch (req.method) {
-    case 'POST':
-      const {
-        diasEntregas,
-        ...rest
-      } = req.body
+    case "POST":
+      const { diasEntregas, ...rest } = req.body;
       try {
-        if (!req.body.nome) throw new Error("Nome do cliente não pode ser nulo.")
+        if (!req.body.nome)
+          throw new Error("Nome do cliente não pode ser nulo.");
         const user: any = await prisma.clientes.create({
           data: {
             ...rest,
-            diasEntregas: diasEntregas.join(',') + ',',
-          }
-        })
-        return res.status(201).json(user)
+            diasEntregas: diasEntregas.join(",") + ",",
+          },
+        });
+        return res.status(201).json(user);
       } catch (error: any) {
-        return res.status(400).json({ error: true, message: error.message })
+        return res.status(400).json({ error: true, message: error.message });
       }
-      break
+      break;
     default:
       try {
         const users = await prisma.clientes.findMany({
           orderBy: {
-            nome: 'asc'
+            nome: "asc",
           },
           include: {
             Vendas: {
@@ -45,25 +46,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               include: {
                 FluxoCaixa: {
                   include: {
-                    Caixa: true
-                  }
+                    Caixa: true,
+                  },
                 },
-
-              }
-            }
+              },
+            },
           },
-        })
+        });
         const modifiedUsers = users.map((user) => {
           // Modifica a propriedade 'diasEntregas' de cada objeto
-          const diasEntregasArray: any = user.diasEntregas?.split(',').filter(Boolean)
-          user.diasEntregas = diasEntregasArray
-          return user
-        })
-        res.status(200).json(modifiedUsers)
-      } catch (error) {
-        res.status(500).json(error)
+          const diasEntregasArray: any = user.diasEntregas
+            ?.split(",")
+            .filter(Boolean);
+          user.diasEntregas = diasEntregasArray;
+          return user;
+        });
+        res.status(200).json(modifiedUsers);
+      } catch (error: any) {
+        res.status(500).json(error?.message);
       }
-      break
-
+      break;
   }
 }

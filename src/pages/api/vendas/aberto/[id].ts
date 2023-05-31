@@ -1,28 +1,29 @@
 import { prisma } from "@/helpers/api";
 import { NextApiRequest, NextApiResponse } from "next";
-import { iVendas } from "..";
 
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-  const { id }: Partial<{ id: string }> = req.query
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { id }: Partial<{ id: string }> = req.query;
   switch (req.method) {
     default:
       try {
         const vendas = await prisma.vendas.findMany({
           orderBy: {
-            data: 'asc'
+            data: "asc",
           },
           where: {
             idCliente: id,
             NOT: {
-              status: 'concluido'
-            }
-
+              status: "concluido",
+            },
           },
           include: {
             Clientes: {
               select: {
-                nome: true
-              }
+                nome: true,
+              },
             },
             FluxoCaixa: true,
             ItemVenda: {
@@ -31,22 +32,23 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
                   select: {
                     id: true,
                     nome: true,
-                  }
+                  },
                 },
                 quantidade: true,
-              }
-            }
-          }
-        })
+              },
+            },
+          },
+        });
         const valorTotal = vendas.reduce((acc: number, v: any): any => {
-          return acc = acc + (v.status === 'parcial' ? v.saldoAPagar : v.valorVenda)
-        }, 0)
+          return (acc =
+            acc + (v.status === "parcial" ? v.saldoAPagar : v.valorVenda));
+        }, 0);
         return res.json({
           total: valorTotal,
-          data: vendas
-        })
+          data: vendas,
+        });
       } catch (error: any) {
-        return res.status(400).json({ error: true, message: error.message })
+        return res.status(400).json({ error: true, message: error.message });
       }
       break;
   }

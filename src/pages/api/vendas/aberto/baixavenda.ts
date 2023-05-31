@@ -1,7 +1,6 @@
 import { prisma } from "@/helpers/api";
 import dayjs from "dayjs";
 import { NextApiRequest, NextApiResponse } from "next";
-import { iVendas, iVendasProdutos } from "..";
 
 export default async function handle(
   req: NextApiRequest,

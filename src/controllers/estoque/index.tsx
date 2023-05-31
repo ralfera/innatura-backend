@@ -38,7 +38,7 @@ export class EstoqueController {
         },
       });
       return query;
-    } catch (error) {
+    } catch (error: any) {
       return error;
     }
   }
@@ -65,7 +65,7 @@ export class EstoqueController {
         },
       });
       return query;
-    } catch (error) {
+    } catch (error: any) {
       return error;
     }
   }
@@ -75,7 +75,7 @@ export class EstoqueController {
     estoquePara,
     produtos,
     observacao = "Transferencia de Produtos Estoque",
-  }: iTransferenciaEstoque) {
+  }: any) {
     if (!estoqueDe || !estoquePara) {
       throw new Error(
         "Nenhum estoque foi selecionado. Por favor, selecione o estoque de origem!"
@@ -84,10 +84,9 @@ export class EstoqueController {
     const estoque = await this.byEstoque(estoqueDe);
 
     for (let produtoPedido of produtos) {
-      const { quantidade, nome } = estoque.find(
-        (p) => p.idProduto === produtoPedido.produtoId
+      const { quantidade, nome }: any = estoque.find(
+        (p: any) => p.idProduto === produtoPedido.produtoId
       );
-      console.log(quantidade, produtoPedido.quantidade);
       if (quantidade < produtoPedido.quantidade) {
         throw new Error(
           `Produto ${nome} não possui quantidade suficiente neste estoque.`
@@ -112,7 +111,7 @@ export class EstoqueController {
           nomeEstoqueId: estoquePara,
         },
       ])
-      .reduce((acc, val) => acc.concat(val), []);
+      .reduce((acc: any, val: any) => acc.concat(val), []);
 
     const transferencia = await prisma.movimentacao_Estoque.createMany({
       data: parsed,
@@ -198,7 +197,7 @@ export class EstoqueController {
     }
   }
 
-  async verificaSaldo({ produtos, estoqueId }) {
+  async verificaSaldo({ produtos, estoqueId }: any) {
     const estoque = await this.byEstoque();
     console.log(estoque);
     for (let prod of produtos) {
@@ -212,7 +211,7 @@ export class EstoqueController {
       ) {
         throw new Error(
           `O produto ${
-            estoque.find((v) => v.idProduto === prod.idProduto)?.nome
+            estoque.find((v: any) => v.idProduto === prod.idProduto)?.nome
           } não foi encontrado ou não tem unidades suficientes no estoque ${
             estoqueId === 1 ? "Matriz" : "Ceasa"
           }.`
@@ -222,7 +221,7 @@ export class EstoqueController {
     return true;
   }
 
-  async movVendaEstoque({ produtos, estoqueId, vendaId }) {
+  async movVendaEstoque({ produtos, estoqueId, vendaId }: any) {
     // data;
     // idProduto;
     // movimento;
@@ -262,8 +261,8 @@ export class EstoqueController {
 
   async getEstoque() {
     const estoque = await prisma.movimentacao_Estoque.groupBy({
-      by: ['nomeEstoqueId', 'idProduto'],
-      _count: {}
+      by: ["nomeEstoqueId", "idProduto"],
+      _count: {},
     });
   }
 }
