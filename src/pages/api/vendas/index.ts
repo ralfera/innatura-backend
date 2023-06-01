@@ -1,10 +1,6 @@
-import { CaixaController } from "@/controllers/caixa";
 import { EstoqueController } from "@/controllers/estoque";
-import { PedidosController } from "@/controllers/pedidos";
 import { VendasController } from "@/controllers/vendas";
-import { api, prisma } from "@/helpers/api";
-import { Produtos } from "@prisma/client";
-import axios from "axios";
+import { prisma } from "@/helpers/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 // REGRAS
@@ -16,25 +12,32 @@ import { NextApiRequest, NextApiResponse } from "next";
 //  - Se eu Vender A vista Gerar Entrada no Fluxo de Caixa
 //  - Atualizar status e dataPagamento quando o status é concluido.
 
-
-
 export interface iVendasProdutos {
-  idVenda?: string,
-  idProduto: string,
-  desconto?: number,
-  quantidade: number,
-  valor: number
+  idVenda?: string;
+  idProduto: string;
+  desconto?: number;
+  quantidade: number;
+  valor: number;
 }
 
-
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   switch (req.method) {
-    case 'POST':
-      const { idCliente, caixaId, idFormaPagamento, produtos, desconto, idEstoque }: any = req.body
+    case "POST":
+      const {
+        idCliente,
+        caixaId,
+        idFormaPagamento,
+        produtos,
+        desconto,
+        idEstoque,
+      }: any = req.body;
 
       try {
         if (!caixaId) {
-          throw new Error("Sem caixa aberto. Por favor abre um caixa primeiro")
+          throw new Error("Sem caixa aberto. Por favor abre um caixa primeiro");
         }
 
         const venda: any = await new VendasController().createVenda({
@@ -43,17 +46,20 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
           idEstoque: idEstoque,
           desconto: desconto,
           idFormaPagamento: idFormaPagamento,
-          produtos: produtos
-        })
+          produtos: produtos,
+        });
         if (venda.error) {
-          throw new Error(venda.message)
+          throw new Error(venda.message);
         }
-        const movEstoque = await new EstoqueController().movVendaEstoque({ produtos: produtos, estoqueId: idEstoque, vendaId: venda.id })
+        const movEstoque = await new EstoqueController().movVendaEstoque({
+          produtos: produtos,
+          estoqueId: idEstoque,
+          vendaId: venda.id,
+        });
 
-
-        return res.status(200).json({ venda, movEstoque })
+        return res.status(200).json({ venda, movEstoque });
       } catch (error: any) {
-        return res.status(400).json({ error: true, message: error.message })
+        return res.status(400).json({ error: true, message: error.message });
       }
 
       break;
@@ -62,24 +68,23 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
       try {
         const vendas = await prisma.vendas.findMany({
           orderBy: {
-            data: 'desc'
+            data: "desc",
           },
           include: {
             Clientes: true,
             ItemVenda: {
               include: {
-                Produto: true
-              }
+                Produto: true,
+              },
             },
-            FluxoCaixa: true
+            FluxoCaixa: true,
           },
-          take: 100
-        })
-        return res.status(200).json(vendas)
+          take: 100,
+        });
+        return res.status(200).json(vendas);
       } catch (error: any) {
-        return res.status(400).json({ error: true, message: error.message })
+        return res.status(400).json({ error: true, message: error.message });
       }
       break;
   }
-
 }
